@@ -17,8 +17,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef LIBREPCB_PROJECT_CMDSCHEMATICNETLINEREMOVE_H
-#define LIBREPCB_PROJECT_CMDSCHEMATICNETLINEREMOVE_H
+#ifndef LIBREPCB_PROJECT_CMDSCHEMATICNETSEGMENTADD_H
+#define LIBREPCB_PROJECT_CMDSCHEMATICNETSEGMENTADD_H
 
 /*****************************************************************************************
  *  Includes
@@ -32,23 +32,28 @@
 namespace librepcb {
 namespace project {
 
+class NetSignal;
 class Schematic;
-class SI_NetLine;
+class SI_NetSegment;
 
 /*****************************************************************************************
- *  Class CmdSchematicNetLineRemove
+ *  Class CmdSchematicNetSegmentAdd
  ****************************************************************************************/
 
 /**
- * @brief The CmdSchematicNetLineRemove class
+ * @brief The CmdSchematicNetSegmentAdd class
  */
-class CmdSchematicNetLineRemove final : public UndoCommand
+class CmdSchematicNetSegmentAdd final : public UndoCommand
 {
     public:
 
         // Constructors / Destructor
-        explicit CmdSchematicNetLineRemove(SI_NetLine& netline) noexcept;
-        ~CmdSchematicNetLineRemove() noexcept;
+        explicit CmdSchematicNetSegmentAdd(SI_NetSegment& segment) noexcept;
+        CmdSchematicNetSegmentAdd(Schematic& schematic, NetSignal& netsignal) noexcept;
+        ~CmdSchematicNetSegmentAdd() noexcept;
+
+        // Getters
+        SI_NetSegment* getNetSegment() const noexcept {return mNetSegment;}
 
 
     private:
@@ -68,7 +73,8 @@ class CmdSchematicNetLineRemove final : public UndoCommand
         // Private Member Variables
 
         Schematic& mSchematic;
-        SI_NetLine& mNetLine;
+        NetSignal& mNetSignal;
+        SI_NetSegment* mNetSegment;
 };
 
 /*****************************************************************************************
@@ -78,4 +84,4 @@ class CmdSchematicNetLineRemove final : public UndoCommand
 } // namespace project
 } // namespace librepcb
 
-#endif // LIBREPCB_PROJECT_CMDSCHEMATICNETLINEREMOVE_H
+#endif // LIBREPCB_PROJECT_CMDSCHEMATICNETSEGMENTADD_H

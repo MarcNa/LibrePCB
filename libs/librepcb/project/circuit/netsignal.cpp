@@ -28,8 +28,7 @@
 #include "../erc/ercmsg.h"
 #include "componentsignalinstance.h"
 #include <librepcb/common/fileio/xmldomelement.h>
-#include "../schematics/items/si_netlabel.h"
-#include "../schematics/items/si_netpoint.h"
+#include "../schematics/items/si_netsegment.h"
 #include "../boards/items/bi_netpoint.h"
 #include "../boards/items/bi_via.h"
 
@@ -82,8 +81,7 @@ int NetSignal::getRegisteredElementsCount() const noexcept
 {
     int count = 0;
     count += mRegisteredComponentSignals.count();
-    count += mRegisteredSchematicNetPoints.count();
-    count += mRegisteredSchematicNetLabels.count();
+    count += mRegisteredSchematicNetSegments.count();
     count += mRegisteredBoardNetPoints.count();
     count += mRegisteredBoardVias.count();
     return count;
@@ -180,43 +178,23 @@ void NetSignal::unregisterComponentSignal(ComponentSignalInstance& signal) throw
     updateErcMessages();
 }
 
-void NetSignal::registerSchematicNetPoint(SI_NetPoint& netpoint) throw (Exception)
+void NetSignal::registerSchematicNetSegment(SI_NetSegment& netsegment) throw (Exception)
 {
-    if ((!mIsAddedToCircuit) || (mRegisteredSchematicNetPoints.contains(&netpoint))
-        || (netpoint.getCircuit() != mCircuit))
+    if ((!mIsAddedToCircuit) || (mRegisteredSchematicNetSegments.contains(&netsegment))
+        || (netsegment.getCircuit() != mCircuit))
     {
         throw LogicError(__FILE__, __LINE__);
     }
-    mRegisteredSchematicNetPoints.append(&netpoint);
+    mRegisteredSchematicNetSegments.append(&netsegment);
     updateErcMessages();
 }
 
-void NetSignal::unregisterSchematicNetPoint(SI_NetPoint& netpoint) throw (Exception)
+void NetSignal::unregisterSchematicNetSegment(SI_NetSegment& netsegment) throw (Exception)
 {
-    if ((!mIsAddedToCircuit) || (!mRegisteredSchematicNetPoints.contains(&netpoint))) {
+    if ((!mIsAddedToCircuit) || (!mRegisteredSchematicNetSegments.contains(&netsegment))) {
         throw LogicError(__FILE__, __LINE__);
     }
-    mRegisteredSchematicNetPoints.removeOne(&netpoint);
-    updateErcMessages();
-}
-
-void NetSignal::registerSchematicNetLabel(SI_NetLabel& netlabel) throw (Exception)
-{
-    if ((!mIsAddedToCircuit) || (mRegisteredSchematicNetLabels.contains(&netlabel))
-        || (netlabel.getCircuit() != mCircuit))
-    {
-        throw LogicError(__FILE__, __LINE__);
-    }
-    mRegisteredSchematicNetLabels.append(&netlabel);
-    updateErcMessages();
-}
-
-void NetSignal::unregisterSchematicNetLabel(SI_NetLabel& netlabel) throw (Exception)
-{
-    if ((!mIsAddedToCircuit) || (!mRegisteredSchematicNetLabels.contains(&netlabel))) {
-        throw LogicError(__FILE__, __LINE__);
-    }
-    mRegisteredSchematicNetLabels.removeOne(&netlabel);
+    mRegisteredSchematicNetSegments.removeOne(&netsegment);
     updateErcMessages();
 }
 

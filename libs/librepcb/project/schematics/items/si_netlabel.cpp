@@ -22,6 +22,7 @@
  ****************************************************************************************/
 #include <QtCore>
 #include "si_netlabel.h"
+#include "si_netsegment.h"
 #include "../schematic.h"
 #include "../../circuit/netsignal.h"
 #include "../../circuit/circuit.h"
@@ -40,17 +41,12 @@ namespace project {
  *  Constructors / Destructor
  ****************************************************************************************/
 
-SI_NetLabel::SI_NetLabel(Schematic& schematic, const XmlDomElement& domElement) throw (Exception) :
-    SI_Base(schematic), mUuid(), mPosition(), mRotation(), mNetSignal(nullptr)
+SI_NetLabel::SI_NetLabel(SI_NetSegment& segment, const XmlDomElement& domElement) throw (Exception) :
+    SI_Base(segment.getSchematic()), mNetSegment(segment), mUuid(), mPosition(),
+    mRotation()
 {
     // read attributes
     mUuid = domElement.getAttribute<Uuid>("uuid", true);
-    Uuid netSignalUuid = domElement.getAttribute<Uuid>("netsignal", true);
-    mNetSignal = mSchematic.getProject().getCircuit().getNetSignalByUuid(netSignalUuid);
-    if(!mNetSignal) {
-        throw RuntimeError(__FILE__, __LINE__, netSignalUuid.toStr(),
-            QString(tr("Invalid net signal UUID: \"%1\"")).arg(netSignalUuid.toStr()));
-    }
     mPosition.setX(domElement.getAttribute<Length>("x", true));
     mPosition.setY(domElement.getAttribute<Length>("y", true));
     mRotation = domElement.getAttribute<Angle>("rotation", true);
@@ -58,17 +54,15 @@ SI_NetLabel::SI_NetLabel(Schematic& schematic, const XmlDomElement& domElement) 
     init();
 }
 
-SI_NetLabel::SI_NetLabel(Schematic& schematic, NetSignal& netsignal, const Point& position) throw (Exception) :
-    SI_Base(schematic), mUuid(Uuid::createRandom()), mPosition(position), mRotation(0),
-    mNetSignal(&netsignal)
+SI_NetLabel::SI_NetLabel(SI_NetSegment& segment, const Point& position) throw (Exception) :
+    SI_Base(segment.getSchematic()), mNetSegment(segment), mUuid(Uuid::createRandom()),
+    mPosition(position), mRotation(0)
 {
     init();
 }
 
 void SI_NetLabel::init() throw (Exception)
 {
-    connect(mNetSignal, &NetSignal::nameChanged, this, &SI_NetLabel::netSignalNameChanged);
-
     // create the graphics item
     mGraphicsItem.reset(new SGI_NetLabel(*this));
     mGraphicsItem->setPos(mPosition.toPxQPointF());
@@ -83,27 +77,17 @@ SI_NetLabel::~SI_NetLabel() noexcept
 }
 
 /*****************************************************************************************
- *  Setters
+ *  Getters
  ****************************************************************************************/
 
-void SI_NetLabel::setNetSignal(NetSignal& netsignal) noexcept
+NetSignal& SI_NetLabel::getNetSignalOfNetSegment() const noexcept
 {
-    if (&netsignal != mNetSignal) {
-        if (netsignal.getCircuit() != getCircuit()) {
-            throw LogicError(__FILE__, __LINE__);
-        }
-        if (isAddedToSchematic()) {
-            mNetSignal->unregisterSchematicNetLabel(*this); // can throw
-            auto sg = scopeGuard([&](){mNetSignal->registerSchematicNetLabel(*this);});
-            netsignal.registerSchematicNetLabel(*this); // can throw
-            sg.dismiss();
-        }
-        disconnect(mNetSignal, &NetSignal::nameChanged, this, &SI_NetLabel::netSignalNameChanged);
-        connect(&netsignal, &NetSignal::nameChanged, this, &SI_NetLabel::netSignalNameChanged);
-        mNetSignal = &netsignal;
-        mGraphicsItem->updateCacheAndRepaint();
-    }
+    return mNetSegment.getNetSignal();
 }
+
+/*****************************************************************************************
+ *  Setters
+ ****************************************************************************************/
 
 void SI_NetLabel::setPosition(const Point& position) noexcept
 {
@@ -126,25 +110,25 @@ void SI_NetLabel::setRotation(const Angle& rotation) noexcept
  *  General Methods
  ****************************************************************************************/
 
-void SI_NetLabel::addToSchematic(GraphicsScene& scene) throw (Exception)
+void SI_NetLabel::addToSchematic() throw (Exception)
 {
     if (isAddedToSchematic()) {
         throw LogicError(__FILE__, __LINE__);
     }
-    mNetSignal->registerSchematicNetLabel(*this); // can throw
-    mHighlightChangedConnection = connect(mNetSignal, &NetSignal::highlightedChanged,
+    mHighlightChangedConnection = connect(&getNetSignalOfNetSegment(),
+                                          &NetSignal::highlightedChanged,
                                           [this](){mGraphicsItem->update();});
-    SI_Base::addToSchematic(scene, *mGraphicsItem);
+    SI_Base::addToSchematic(mGraphicsItem.data());
+    mGraphicsItem->updateCacheAndRepaint();
 }
 
-void SI_NetLabel::removeFromSchematic(GraphicsScene& scene) throw (Exception)
+void SI_NetLabel::removeFromSchematic() throw (Exception)
 {
     if (!isAddedToSchematic()) {
         throw LogicError(__FILE__, __LINE__);
     }
-    mNetSignal->unregisterSchematicNetLabel(*this); // can throw
     disconnect(mHighlightChangedConnection);
-    SI_Base::removeFromSchematic(scene, *mGraphicsItem);
+    SI_Base::removeFromSchematic(mGraphicsItem.data());
 }
 
 XmlDomElement* SI_NetLabel::serializeToXmlDomElement() const throw (Exception)
@@ -156,7 +140,6 @@ XmlDomElement* SI_NetLabel::serializeToXmlDomElement() const throw (Exception)
     root->setAttribute("x", mPosition.getX());
     root->setAttribute("y", mPosition.getY());
     root->setAttribute("rotation", mRotation);
-    root->setAttribute("netsignal", mNetSignal->getUuid());
     return root.take();
 }
 
@@ -176,23 +159,12 @@ void SI_NetLabel::setSelected(bool selected) noexcept
 }
 
 /*****************************************************************************************
- *  Private Slots
- ****************************************************************************************/
-
-void SI_NetLabel::netSignalNameChanged(const QString& newName) noexcept
-{
-    Q_UNUSED(newName);
-    mGraphicsItem->updateCacheAndRepaint();
-}
-
-/*****************************************************************************************
  *  Private Methods
  ****************************************************************************************/
 
 bool SI_NetLabel::checkAttributesValidity() const noexcept
 {
     if (mUuid.isNull())                             return false;
-    if (mNetSignal == nullptr)                      return false;
     return true;
 }
 

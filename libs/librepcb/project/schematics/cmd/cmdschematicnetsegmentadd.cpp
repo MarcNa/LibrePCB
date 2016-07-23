@@ -17,60 +17,67 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef LIBREPCB_PROJECT_CMDSCHEMATICNETLABELREMOVE_H
-#define LIBREPCB_PROJECT_CMDSCHEMATICNETLABELREMOVE_H
-
 /*****************************************************************************************
  *  Includes
  ****************************************************************************************/
 #include <QtCore>
-#include <librepcb/common/undocommand.h>
+#include "cmdschematicnetsegmentadd.h"
+#include "../schematic.h"
+#include "../items/si_netsegment.h"
 
 /*****************************************************************************************
- *  Namespace / Forward Declarations
+ *  Namespace
  ****************************************************************************************/
 namespace librepcb {
 namespace project {
 
-class Schematic;
-class SI_NetLabel;
-class SI_NetSegment;
-
 /*****************************************************************************************
- *  Class CmdSchematicNetLabelRemove
+ *  Constructors / Destructor
  ****************************************************************************************/
 
-/**
- * @brief The CmdSchematicNetLabelRemove class
- */
-class CmdSchematicNetLabelRemove final : public UndoCommand
+CmdSchematicNetSegmentAdd::CmdSchematicNetSegmentAdd(SI_NetSegment& segment) noexcept :
+    UndoCommand(tr("Add net segment")),
+    mSchematic(segment.getSchematic()), mNetSignal(segment.getNetSignal()),
+    mNetSegment(&segment)
 {
-    public:
+}
 
-        // Constructors / Destructor
-        CmdSchematicNetLabelRemove(SI_NetLabel& netlabel) noexcept;
-        ~CmdSchematicNetLabelRemove() noexcept;
+CmdSchematicNetSegmentAdd::CmdSchematicNetSegmentAdd(Schematic& schematic,
+                                                     NetSignal& netsignal) noexcept :
+    UndoCommand(tr("Add net segment")),
+    mSchematic(schematic), mNetSignal(netsignal), mNetSegment(nullptr)
+{
+}
 
+CmdSchematicNetSegmentAdd::~CmdSchematicNetSegmentAdd() noexcept
+{
+}
 
-    private:
+/*****************************************************************************************
+ *  Inherited from UndoCommand
+ ****************************************************************************************/
 
-        // Private Methods
+bool CmdSchematicNetSegmentAdd::performExecute() throw (Exception)
+{
+    if (!mNetSegment) {
+        // create new net segment
+        mNetSegment = new SI_NetSegment(mSchematic, mNetSignal); // can throw
+    }
 
-        /// @copydoc UndoCommand::performExecute()
-        bool performExecute() throw (Exception) override;
+    performRedo(); // can throw
 
-        /// @copydoc UndoCommand::performUndo()
-        void performUndo() throw (Exception) override;
+    return true;
+}
 
-        /// @copydoc UndoCommand::performRedo()
-        void performRedo() throw (Exception) override;
+void CmdSchematicNetSegmentAdd::performUndo() throw (Exception)
+{
+    mSchematic.removeNetSegment(*mNetSegment); // can throw
+}
 
-
-        // Private Member Variables
-
-        SI_NetSegment& mNetSegment;
-        SI_NetLabel& mNetLabel;
-};
+void CmdSchematicNetSegmentAdd::performRedo() throw (Exception)
+{
+    mSchematic.addNetSegment(*mNetSegment); // can throw
+}
 
 /*****************************************************************************************
  *  End of File
@@ -78,5 +85,3 @@ class CmdSchematicNetLabelRemove final : public UndoCommand
 
 } // namespace project
 } // namespace librepcb
-
-#endif // LIBREPCB_PROJECT_CMDSCHEMATICNETLABELREMOVE_H

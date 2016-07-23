@@ -37,6 +37,7 @@ namespace project {
 class Circuit;
 class Schematic;
 class NetSignal;
+class SI_NetSegment;
 
 /*****************************************************************************************
  *  Class SI_NetLabel
@@ -54,23 +55,23 @@ class SI_NetLabel final : public SI_Base, public IF_XmlSerializableObject
         // Constructors / Destructor
         SI_NetLabel() = delete;
         SI_NetLabel(const SI_NetLabel& other) = delete;
-        explicit SI_NetLabel(Schematic& schematic, const XmlDomElement& domElement) throw (Exception);
-        explicit SI_NetLabel(Schematic& schematic, NetSignal& netsignal, const Point& position) throw (Exception);
+        SI_NetLabel(SI_NetSegment& segment, const XmlDomElement& domElement) throw (Exception);
+        SI_NetLabel(SI_NetSegment& segment, const Point& position) throw (Exception);
         ~SI_NetLabel() noexcept;
 
         // Getters
         const Uuid& getUuid() const noexcept {return mUuid;}
         const Angle& getRotation() const noexcept {return mRotation;}
-        NetSignal& getNetSignal() const noexcept {return *mNetSignal;}
+        SI_NetSegment& getNetSegment() const noexcept {return mNetSegment;}
+        NetSignal& getNetSignalOfNetSegment() const noexcept;
 
         // Setters
-        void setNetSignal(NetSignal& netsignal) noexcept;
         void setPosition(const Point& position) noexcept;
         void setRotation(const Angle& rotation) noexcept;
 
         // General Methods
-        void addToSchematic(GraphicsScene& scene) throw (Exception) override;
-        void removeFromSchematic(GraphicsScene& scene) throw (Exception) override;
+        void addToSchematic() throw (Exception) override;
+        void removeFromSchematic() throw (Exception) override;
 
         /// @copydoc IF_XmlSerializableObject#serializeToXmlDomElement()
         XmlDomElement* serializeToXmlDomElement() const throw (Exception) override;
@@ -83,11 +84,6 @@ class SI_NetLabel final : public SI_Base, public IF_XmlSerializableObject
 
         // Operator Overloadings
         SI_NetLabel& operator=(const SI_NetLabel& rhs) = delete;
-
-
-    private slots:
-
-        void netSignalNameChanged(const QString& newName) noexcept;
 
 
     private:
@@ -103,10 +99,10 @@ class SI_NetLabel final : public SI_Base, public IF_XmlSerializableObject
         QMetaObject::Connection mHighlightChangedConnection;
 
         // Attributes
+        SI_NetSegment& mNetSegment;
         Uuid mUuid;
         Point mPosition;
         Angle mRotation;
-        NetSignal* mNetSignal;
 };
 
 /*****************************************************************************************

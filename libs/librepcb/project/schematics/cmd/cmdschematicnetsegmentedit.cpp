@@ -21,9 +21,8 @@
  *  Includes
  ****************************************************************************************/
 #include <QtCore>
-#include "cmdschematicnetpointadd.h"
-#include "../schematic.h"
-#include "../items/si_netpoint.h"
+#include "cmdschematicnetsegmentedit.h"
+#include "../items/si_netsegment.h"
 
 /*****************************************************************************************
  *  Namespace
@@ -35,61 +34,45 @@ namespace project {
  *  Constructors / Destructor
  ****************************************************************************************/
 
-CmdSchematicNetPointAdd::CmdSchematicNetPointAdd(SI_NetPoint& netpoint) noexcept :
-    UndoCommand(tr("Add netpoint")),
-    mSchematic(netpoint.getSchematic()), mNetSignal(nullptr), mAttachedToSymbol(false),
-    mPosition(), mSymbolPin(nullptr), mNetPoint(&netpoint)
+CmdSchematicNetSegmentEdit::CmdSchematicNetSegmentEdit(SI_NetSegment& netsegment) noexcept :
+    UndoCommand(tr("Edit netpoint")), mNetSegment(netsegment),
+    mOldNetSignal(&netsegment.getNetSignal()), mNewNetSignal(mOldNetSignal)
 {
 }
 
-CmdSchematicNetPointAdd::CmdSchematicNetPointAdd(Schematic& schematic, NetSignal& netsignal,
-                                                 const Point& position) noexcept :
-    UndoCommand(tr("Add netpoint")),
-    mSchematic(schematic), mNetSignal(&netsignal), mAttachedToSymbol(false),
-    mPosition(position), mSymbolPin(nullptr), mNetPoint(nullptr)
+CmdSchematicNetSegmentEdit::~CmdSchematicNetSegmentEdit() noexcept
 {
 }
 
-CmdSchematicNetPointAdd::CmdSchematicNetPointAdd(Schematic& schematic, NetSignal& netsignal,
-                                                 SI_SymbolPin& pin) noexcept :
-    UndoCommand(tr("Add netpoint")),
-    mSchematic(schematic), mNetSignal(&netsignal), mAttachedToSymbol(true),
-    mPosition(), mSymbolPin(&pin), mNetPoint(nullptr)
-{
-}
+/*****************************************************************************************
+ *  Setters
+ ****************************************************************************************/
 
-CmdSchematicNetPointAdd::~CmdSchematicNetPointAdd() noexcept
+void CmdSchematicNetSegmentEdit::setNetSignal(NetSignal& netsignal) noexcept
 {
+    Q_ASSERT(!wasEverExecuted());
+    mNewNetSignal = &netsignal;
 }
 
 /*****************************************************************************************
  *  Inherited from UndoCommand
  ****************************************************************************************/
 
-bool CmdSchematicNetPointAdd::performExecute() throw (Exception)
+bool CmdSchematicNetSegmentEdit::performExecute() throw (Exception)
 {
-    if (!mNetPoint) {
-        // create new netpoint
-        if (mAttachedToSymbol) {
-            mNetPoint = new SI_NetPoint(mSchematic, *mNetSignal, *mSymbolPin); // can throw
-        } else {
-            mNetPoint = new SI_NetPoint(mSchematic, *mNetSignal, mPosition); // can throw
-        }
-    }
-
     performRedo(); // can throw
 
-    return true;
+    return true; // TODO: determine if the netsegment was really modified
 }
 
-void CmdSchematicNetPointAdd::performUndo() throw (Exception)
+void CmdSchematicNetSegmentEdit::performUndo() throw (Exception)
 {
-    mSchematic.removeNetPoint(*mNetPoint); // can throw
+    mNetSegment.setNetSignal(*mOldNetSignal); // can throw
 }
 
-void CmdSchematicNetPointAdd::performRedo() throw (Exception)
+void CmdSchematicNetSegmentEdit::performRedo() throw (Exception)
 {
-    mSchematic.addNetPoint(*mNetPoint); // can throw
+    mNetSegment.setNetSignal(*mNewNetSignal); // can throw
 }
 
 /*****************************************************************************************

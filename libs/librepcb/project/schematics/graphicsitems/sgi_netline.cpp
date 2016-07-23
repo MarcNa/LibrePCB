@@ -62,6 +62,8 @@ SGI_NetLine::~SGI_NetLine() noexcept
 
 void SGI_NetLine::updateCacheAndRepaint() noexcept
 {
+    setToolTip(mNetLine.getNetSignalOfNetSegment().getName());
+
     prepareGeometryChange();
     mLineF.setP1(mNetLine.getStartPoint().getPosition().toPxQPointF());
     mLineF.setP2(mNetLine.getEndPoint().getPosition().toPxQPointF());
@@ -88,7 +90,7 @@ void SGI_NetLine::paint(QPainter* painter, const QStyleOptionGraphicsItem* optio
     Q_UNUSED(option);
     Q_UNUSED(widget);
 
-    bool highlight = mNetLine.isSelected() || mNetLine.getNetSignal().isHighlighted();
+    bool highlight = mNetLine.isSelected() || mNetLine.getNetSignalOfNetSegment().isHighlighted();
 
     // draw line
     if (mLayer->isVisible())
@@ -110,7 +112,7 @@ void SGI_NetLine::paint(QPainter* painter, const QStyleOptionGraphicsItem* optio
         font.setPixelSize(3);
         painter->setFont(font);
         painter->setPen(QPen(layer->getColor(highlight), 0));
-        painter->drawText(mLineF.pointAt((qreal)0.5), mNetLine.getNetSignal().getName());
+        painter->drawText(mLineF.pointAt((qreal)0.5), mNetLine.getNetSignalOfNetSegment().getName());
     }
     layer = getSchematicLayer(SchematicLayer::LayerID::DEBUG_GraphicsItemsBoundingRect); Q_ASSERT(layer);
     if (layer->isVisible())
@@ -129,7 +131,7 @@ void SGI_NetLine::paint(QPainter* painter, const QStyleOptionGraphicsItem* optio
 
 SchematicLayer* SGI_NetLine::getSchematicLayer(int id) const noexcept
 {
-    return mNetLine.getSchematic().getProject().getSchematicLayer(id);
+    return mNetLine.getProject().getSchematicLayer(id);
 }
 
 /*****************************************************************************************

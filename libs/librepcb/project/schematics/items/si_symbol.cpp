@@ -160,7 +160,7 @@ void SI_Symbol::setRotation(const Angle& newRotation) noexcept
  *  General Methods
  ****************************************************************************************/
 
-void SI_Symbol::addToSchematic(GraphicsScene& scene) throw (Exception)
+void SI_Symbol::addToSchematic() throw (Exception)
 {
     if (isAddedToSchematic()) {
         throw LogicError(__FILE__, __LINE__);
@@ -169,26 +169,26 @@ void SI_Symbol::addToSchematic(GraphicsScene& scene) throw (Exception)
     mComponentInstance->registerSymbol(*this); // can throw
     sgl.add([&](){mComponentInstance->unregisterSymbol(*this);});
     foreach (SI_SymbolPin* pin, mPins) {
-        pin->addToSchematic(scene); // can throw
-        sgl.add([pin, &scene](){pin->removeFromSchematic(scene);});
+        pin->addToSchematic(); // can throw
+        sgl.add([pin](){pin->removeFromSchematic();});
     }
-    SI_Base::addToSchematic(scene, *mGraphicsItem);
+    SI_Base::addToSchematic(mGraphicsItem.data());
     sgl.dismiss();
 }
 
-void SI_Symbol::removeFromSchematic(GraphicsScene& scene) throw (Exception)
+void SI_Symbol::removeFromSchematic() throw (Exception)
 {
     if (!isAddedToSchematic()) {
         throw LogicError(__FILE__, __LINE__);
     }
     ScopeGuardList sgl(mPins.count()+1);
     foreach (SI_SymbolPin* pin, mPins) {
-        pin->removeFromSchematic(scene); // can throw
-        sgl.add([pin, &scene](){pin->addToSchematic(scene);});
+        pin->removeFromSchematic(); // can throw
+        sgl.add([pin](){pin->addToSchematic();});
     }
     mComponentInstance->unregisterSymbol(*this); // can throw
     sgl.add([&](){mComponentInstance->registerSymbol(*this);});
-    SI_Base::removeFromSchematic(scene, *mGraphicsItem);
+    SI_Base::removeFromSchematic(mGraphicsItem.data());
     sgl.dismiss();
 }
 

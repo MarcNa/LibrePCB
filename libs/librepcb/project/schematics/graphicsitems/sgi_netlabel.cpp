@@ -25,6 +25,7 @@
 #include <QPrinter>
 #include "sgi_netlabel.h"
 #include "../items/si_netlabel.h"
+#include "../items/si_netsegment.h"
 #include "../schematic.h"
 #include "../../project.h"
 #include "../../circuit/netsignal.h"
@@ -80,7 +81,7 @@ void SGI_NetLabel::updateCacheAndRepaint() noexcept
     mRotate180 = (mNetLabel.getRotation().mappedTo180deg() <= -Angle::deg90()
                   || mNetLabel.getRotation().mappedTo180deg() > Angle::deg90());
 
-    mStaticText.setText(mNetLabel.getNetSignal().getName());
+    mStaticText.setText(mNetLabel.getNetSignalOfNetSegment().getName());
     mStaticText.prepare(QTransform(), mFont);
     mTextOrigin.setX(mRotate180 ? -mStaticText.size().width() : 0);
     mTextOrigin.setY(mRotate180 ? 0 : -0.5-mStaticText.size().height());
@@ -104,7 +105,7 @@ void SGI_NetLabel::paint(QPainter* painter, const QStyleOptionGraphicsItem* opti
     bool deviceIsPrinter = (dynamic_cast<QPrinter*>(painter->device()) != 0);
     const qreal lod = option->levelOfDetailFromTransform(painter->worldTransform());
 
-    bool highlight = mNetLabel.isSelected() || mNetLabel.getNetSignal().isHighlighted();
+    bool highlight = mNetLabel.isSelected() || mNetLabel.getNetSignalOfNetSegment().isHighlighted();
 
     SchematicLayer* layer = getSchematicLayer(SchematicLayer::OriginCrosses); Q_ASSERT(layer);
     if ((layer->isVisible()) && (lod > 2) && (!deviceIsPrinter))
@@ -164,7 +165,7 @@ void SGI_NetLabel::paint(QPainter* painter, const QStyleOptionGraphicsItem* opti
 
 SchematicLayer* SGI_NetLabel::getSchematicLayer(int id) const noexcept
 {
-    return mNetLabel.getSchematic().getProject().getSchematicLayer(id);
+    return mNetLabel.getProject().getSchematicLayer(id);
 }
 
 /*****************************************************************************************

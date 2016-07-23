@@ -17,14 +17,15 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef LIBREPCB_PROJECT_CMDSCHEMATICNETLINEADD_H
-#define LIBREPCB_PROJECT_CMDSCHEMATICNETLINEADD_H
+#ifndef LIBREPCB_PROJECT_CMDSCHEMATICNETSEGMENTEDIT_H
+#define LIBREPCB_PROJECT_CMDSCHEMATICNETSEGMENTEDIT_H
 
 /*****************************************************************************************
  *  Includes
  ****************************************************************************************/
 #include <QtCore>
 #include <librepcb/common/undocommand.h>
+#include <librepcb/common/units/point.h>
 
 /*****************************************************************************************
  *  Namespace / Forward Declarations
@@ -32,29 +33,26 @@
 namespace librepcb {
 namespace project {
 
-class Schematic;
-class SI_NetPoint;
-class SI_NetLine;
+class SI_NetSegment;
+class NetSignal;
 
 /*****************************************************************************************
- *  Class CmdSchematicNetLineAdd
+ *  Class CmdSchematicNetSegmentEdit
  ****************************************************************************************/
 
 /**
- * @brief The CmdSchematicNetLineAdd class
+ * @brief The CmdSchematicNetSegmentEdit class
  */
-class CmdSchematicNetLineAdd final : public UndoCommand
+class CmdSchematicNetSegmentEdit final : public UndoCommand
 {
     public:
 
         // Constructors / Destructor
-        explicit CmdSchematicNetLineAdd(SI_NetLine& netline) noexcept;
-        CmdSchematicNetLineAdd(Schematic& schematic, SI_NetPoint& startPoint,
-                               SI_NetPoint& endPoint) noexcept;
-        ~CmdSchematicNetLineAdd() noexcept;
+        explicit CmdSchematicNetSegmentEdit(SI_NetSegment& netsegment) noexcept;
+        ~CmdSchematicNetSegmentEdit() noexcept;
 
-        // Getters
-        SI_NetLine* getNetLine() const noexcept {return mNetLine;}
+        // Setters
+        void setNetSignal(NetSignal& netsignal) noexcept;
 
 
     private:
@@ -73,10 +71,12 @@ class CmdSchematicNetLineAdd final : public UndoCommand
 
         // Private Member Variables
 
-        Schematic& mSchematic;
-        SI_NetPoint& mStartPoint;
-        SI_NetPoint& mEndPoint;
-        SI_NetLine* mNetLine;
+        // Attributes from the constructor
+        SI_NetSegment& mNetSegment;
+
+        // General Attributes
+        NetSignal* mOldNetSignal;
+        NetSignal* mNewNetSignal;
 };
 
 /*****************************************************************************************
@@ -86,4 +86,4 @@ class CmdSchematicNetLineAdd final : public UndoCommand
 } // namespace project
 } // namespace librepcb
 
-#endif // LIBREPCB_PROJECT_CMDSCHEMATICNETLINEADD_H
+#endif // LIBREPCB_PROJECT_CMDSCHEMATICNETSEGMENTEDIT_H

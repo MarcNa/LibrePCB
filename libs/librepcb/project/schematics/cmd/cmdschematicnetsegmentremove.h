@@ -17,8 +17,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef LIBREPCB_PROJECT_CMDSCHEMATICNETLABELREMOVE_H
-#define LIBREPCB_PROJECT_CMDSCHEMATICNETLABELREMOVE_H
+#ifndef LIBREPCB_PROJECT_CMDSCHEMATICNETSEGMENTREMOVE_H
+#define LIBREPCB_PROJECT_CMDSCHEMATICNETSEGMENTREMOVE_H
 
 /*****************************************************************************************
  *  Includes
@@ -33,23 +33,22 @@ namespace librepcb {
 namespace project {
 
 class Schematic;
-class SI_NetLabel;
 class SI_NetSegment;
 
 /*****************************************************************************************
- *  Class CmdSchematicNetLabelRemove
+ *  Class CmdSchematicNetSegmentRemove
  ****************************************************************************************/
 
 /**
- * @brief The CmdSchematicNetLabelRemove class
+ * @brief The CmdSchematicNetSegmentRemove class
  */
-class CmdSchematicNetLabelRemove final : public UndoCommand
+class CmdSchematicNetSegmentRemove final : public UndoCommand
 {
     public:
 
         // Constructors / Destructor
-        CmdSchematicNetLabelRemove(SI_NetLabel& netlabel) noexcept;
-        ~CmdSchematicNetLabelRemove() noexcept;
+        explicit CmdSchematicNetSegmentRemove(SI_NetSegment& segment) noexcept;
+        ~CmdSchematicNetSegmentRemove() noexcept;
 
 
     private:
@@ -68,15 +67,11 @@ class CmdSchematicNetLabelRemove final : public UndoCommand
 
         // Private Member Variables
 
+        Schematic& mSchematic;
         SI_NetSegment& mNetSegment;
-        SI_NetLabel& mNetLabel;
 };
-
-/*****************************************************************************************
- *  End of File
- ****************************************************************************************/
 
 } // namespace project
 } // namespace librepcb
 
-#endif // LIBREPCB_PROJECT_CMDSCHEMATICNETLABELREMOVE_H
+#endif // LIBREPCB_PROJECT_CMDSCHEMATICNETSEGMENTREMOVE_H

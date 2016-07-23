@@ -86,8 +86,8 @@ class SI_Symbol final : public SI_Base, public IF_XmlSerializableObject,
         void setRotation(const Angle& newRotation) noexcept;
 
         // General Methods
-        void addToSchematic(GraphicsScene& scene) throw (Exception) override;
-        void removeFromSchematic(GraphicsScene& scene) throw (Exception) override;
+        void addToSchematic() throw (Exception) override;
+        void removeFromSchematic() throw (Exception) override;
 
         /// @copydoc IF_XmlSerializableObject#serializeToXmlDomElement()
         XmlDomElement* serializeToXmlDomElement() const throw (Exception) override;

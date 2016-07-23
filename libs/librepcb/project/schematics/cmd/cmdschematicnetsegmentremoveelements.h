@@ -17,54 +17,65 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifndef LIBREPCB_PROJECT_CMDSCHEMATICNETSEGMENTREMOVEELEMENTS_H
+#define LIBREPCB_PROJECT_CMDSCHEMATICNETSEGMENTREMOVEELEMENTS_H
+
 /*****************************************************************************************
  *  Includes
  ****************************************************************************************/
 #include <QtCore>
-#include "cmdschematicnetpointremove.h"
-#include "../schematic.h"
-#include "../items/si_netpoint.h"
+#include <librepcb/common/undocommand.h>
 
 /*****************************************************************************************
- *  Namespace
+ *  Namespace / Forward Declarations
  ****************************************************************************************/
 namespace librepcb {
 namespace project {
 
-/*****************************************************************************************
- *  Constructors / Destructor
- ****************************************************************************************/
-
-CmdSchematicNetPointRemove::CmdSchematicNetPointRemove(SI_NetPoint& netpoint) noexcept :
-    UndoCommand(tr("Remove netpoint")),
-    mSchematic(netpoint.getSchematic()), mNetPoint(netpoint)
-{
-}
-
-CmdSchematicNetPointRemove::~CmdSchematicNetPointRemove() noexcept
-{
-}
+class SI_NetSegment;
+class SI_NetPoint;
+class SI_NetLine;
 
 /*****************************************************************************************
- *  Inherited from UndoCommand
+ *  Class CmdSchematicNetSegmentRemoveElements
  ****************************************************************************************/
 
-bool CmdSchematicNetPointRemove::performExecute() throw (Exception)
+/**
+ * @brief The CmdSchematicNetSegmentRemoveElements class
+ */
+class CmdSchematicNetSegmentRemoveElements final : public UndoCommand
 {
-    performRedo(); // can throw
+    public:
 
-    return true;
-}
+        // Constructors / Destructor
+        CmdSchematicNetSegmentRemoveElements(SI_NetSegment& segment) noexcept;
+        ~CmdSchematicNetSegmentRemoveElements() noexcept;
 
-void CmdSchematicNetPointRemove::performUndo() throw (Exception)
-{
-    mSchematic.addNetPoint(mNetPoint); // can throw
-}
+        // General Methods
+        void removeNetPoint(SI_NetPoint& netpoint) throw (Exception);
+        void removeNetLine(SI_NetLine& netline) throw (Exception);
 
-void CmdSchematicNetPointRemove::performRedo() throw (Exception)
-{
-    mSchematic.removeNetPoint(mNetPoint); // can throw
-}
+
+    private:
+
+        // Private Methods
+
+        /// @copydoc UndoCommand::performExecute()
+        bool performExecute() throw (Exception) override;
+
+        /// @copydoc UndoCommand::performUndo()
+        void performUndo() throw (Exception) override;
+
+        /// @copydoc UndoCommand::performRedo()
+        void performRedo() throw (Exception) override;
+
+
+        // Private Member Variables
+
+        SI_NetSegment& mNetSegment;
+        QList<SI_NetPoint*> mNetPoints;
+        QList<SI_NetLine*> mNetLines;
+};
 
 /*****************************************************************************************
  *  End of File
@@ -72,3 +83,5 @@ void CmdSchematicNetPointRemove::performRedo() throw (Exception)
 
 } // namespace project
 } // namespace librepcb
+
+#endif // LIBREPCB_PROJECT_CMDSCHEMATICNETSEGMENTREMOVEELEMENTS_H

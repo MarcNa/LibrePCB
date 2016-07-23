@@ -24,6 +24,7 @@
 #include "cmdschematicnetlabelremove.h"
 #include "../schematic.h"
 #include "../items/si_netlabel.h"
+#include "../items/si_netsegment.h"
 
 /*****************************************************************************************
  *  Namespace
@@ -35,10 +36,9 @@ namespace project {
  *  Constructors / Destructor
  ****************************************************************************************/
 
-CmdSchematicNetLabelRemove::CmdSchematicNetLabelRemove(Schematic& schematic,
-                                                       SI_NetLabel& netlabel) noexcept :
+CmdSchematicNetLabelRemove::CmdSchematicNetLabelRemove(SI_NetLabel& netlabel) noexcept :
     UndoCommand(tr("Remove netlabel")),
-    mSchematic(schematic), mNetLabel(netlabel)
+    mNetSegment(netlabel.getNetSegment()), mNetLabel(netlabel)
 {
 }
 
@@ -59,12 +59,12 @@ bool CmdSchematicNetLabelRemove::performExecute() throw (Exception)
 
 void CmdSchematicNetLabelRemove::performUndo() throw (Exception)
 {
-    mSchematic.addNetLabel(mNetLabel); // can throw
+    mNetSegment.addNetLabel(mNetLabel); // can throw
 }
 
 void CmdSchematicNetLabelRemove::performRedo() throw (Exception)
 {
-    mSchematic.removeNetLabel(mNetLabel); // can throw
+    mNetSegment.removeNetLabel(mNetLabel); // can throw
 }
 
 /*****************************************************************************************

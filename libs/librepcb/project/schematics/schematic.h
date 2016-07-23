@@ -50,9 +50,11 @@ class ComponentInstance;
 class SI_Base;
 class SI_Symbol;
 class SI_SymbolPin;
-class SI_NetPoint;
+class SI_NetSegment;
 class SI_NetLine;
+class SI_NetPoint;
 class SI_NetLabel;
+class SchematicSelectionQuery;
 
 /*****************************************************************************************
  *  Class Schematic
@@ -63,11 +65,12 @@ class SI_NetLabel;
  * part of a circuit
  *
  * A schematic can contain following items (see #project#SI_Base and #project#SGI_Base):
- *  - netpoint:         #project#SI_NetPoint    + #project#SGI_NetPoint
- *  - netline:          #project#SI_NetLine     + #project#SGI_NetLine
- *  - netlabel:         #project#SI_NetLabel    + #project#SGI_NetLabel
+ *  - netsegment:       #project#SI_NetSegment
+ *      - netpoint:     #project#SI_NetPoint    + #project#SGI_NetPoint
+ *      - netline:      #project#SI_NetLine     + #project#SGI_NetLine
+ *      - netlabel:     #project#SI_NetLabel    + #project#SGI_NetLabel
  *  - symbol:           #project#SI_Symbol      + #project#SGI_Symbol
- *  - symbol pin:       #project#SI_SymbolPin   + #project#SGI_SymbolPin
+ *      - symbol pin:   #project#SI_SymbolPin   + #project#SGI_SymbolPin
  *  - polygon:          TODO
  *  - ellipse:          TODO
  *  - text:             TODO
@@ -111,23 +114,13 @@ class Schematic final : public QObject, public IF_AttributeProvider,
         Project& getProject() const noexcept {return mProject;}
         const FilePath& getFilePath() const noexcept {return mFilePath;}
         const GridProperties& getGridProperties() const noexcept {return *mGridProperties;}
+        GraphicsScene& getGraphicsScene () const noexcept {return *mGraphicsScene;}
         bool isEmpty() const noexcept;
-        QList<SI_Base*> getSelectedItems(bool symbolPins,
-                                         bool floatingPoints,
-                                         bool attachedPoints,
-                                         bool floatingPointsFromFloatingLines,
-                                         bool attachedPointsFromFloatingLines,
-                                         bool floatingPointsFromAttachedLines,
-                                         bool attachedPointsFromAttachedLines,
-                                         bool attachedPointsFromSymbols,
-                                         bool floatingLines,
-                                         bool attachedLines,
-                                         bool attachedLinesFromSymbols) const noexcept;
         QList<SI_Base*> getItemsAtScenePos(const Point& pos) const noexcept;
         QList<SI_NetPoint*> getNetPointsAtScenePos(const Point& pos) const noexcept;
         QList<SI_NetLine*> getNetLinesAtScenePos(const Point& pos) const noexcept;
+        QList<SI_NetLabel*> getNetLabelsAtScenePos(const Point& pos) const noexcept;
         QList<SI_SymbolPin*> getPinsAtScenePos(const Point& pos) const noexcept;
-        QList<SI_Base*> getAllItems() const noexcept;
 
         // Setters: General
         void setGridProperties(const GridProperties& grid) noexcept;
@@ -142,20 +135,10 @@ class Schematic final : public QObject, public IF_AttributeProvider,
         void addSymbol(SI_Symbol& symbol) throw (Exception);
         void removeSymbol(SI_Symbol& symbol) throw (Exception);
 
-        // NetPoint Methods
-        SI_NetPoint* getNetPointByUuid(const Uuid& uuid) const noexcept;
-        void addNetPoint(SI_NetPoint& netpoint) throw (Exception);
-        void removeNetPoint(SI_NetPoint& netpoint) throw (Exception);
-
-        // NetLine Methods
-        SI_NetLine* getNetLineByUuid(const Uuid& uuid) const noexcept;
-        void addNetLine(SI_NetLine& netline) throw (Exception);
-        void removeNetLine(SI_NetLine& netline) throw (Exception);
-
-        // NetLabel Methods
-        SI_NetLabel* getNetLabelByUuid(const Uuid& uuid) const noexcept;
-        void addNetLabel(SI_NetLabel& netlabel) throw (Exception);
-        void removeNetLabel(SI_NetLabel& netlabel) throw (Exception);
+        // NetSegment Methods
+        SI_NetSegment* getNetSegmentByUuid(const Uuid& uuid) const noexcept;
+        void addNetSegment(SI_NetSegment& netsegment) throw (Exception);
+        void removeNetSegment(SI_NetSegment& netsegment) throw (Exception);
 
         // General Methods
         void addToProject() throw (Exception);
@@ -167,6 +150,7 @@ class Schematic final : public QObject, public IF_AttributeProvider,
         void setSelectionRect(const Point& p1, const Point& p2, bool updateItems) noexcept;
         void clearSelection() const noexcept;
         void renderToQPainter(QPainter& painter) const noexcept;
+        SchematicSelectionQuery* createSelectionQuery() const noexcept;
 
         // Helper Methods
         bool getAttributeValue(const QString& attrNS, const QString& attrKey,
@@ -217,9 +201,7 @@ class Schematic final : public QObject, public IF_AttributeProvider,
         QIcon mIcon;
 
         QList<SI_Symbol*> mSymbols;
-        QList<SI_NetPoint*> mNetPoints;
-        QList<SI_NetLine*> mNetLines;
-        QList<SI_NetLabel*> mNetLabels;
+        QList<SI_NetSegment*> mNetSegments;
 };
 
 /*****************************************************************************************
