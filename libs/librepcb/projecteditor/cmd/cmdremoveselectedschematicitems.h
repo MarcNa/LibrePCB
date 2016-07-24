@@ -33,7 +33,12 @@ namespace librepcb {
 namespace project {
 
 class Schematic;
+class SI_NetSegment;
 class SI_NetPoint;
+class SI_NetLine;
+class SI_NetLabel;
+class SI_Symbol;
+class BI_Device;
 class ComponentSignalInstance;
 
 namespace editor {
@@ -47,6 +52,16 @@ namespace editor {
  */
 class CmdRemoveSelectedSchematicItems final : public UndoCommandGroup
 {
+    private:
+
+        // Private Types
+        struct NetSegmentItems {
+            QSet<SI_NetPoint*> netpoints;
+            QSet<SI_NetLine*> netlines;
+            QSet<SI_NetLabel*> netlabels;
+        };
+        typedef QHash<SI_NetSegment*, NetSegmentItems> NetSegmentItemList;
+
     public:
 
         // Constructors / Destructor
@@ -61,8 +76,22 @@ class CmdRemoveSelectedSchematicItems final : public UndoCommandGroup
         /// @copydoc UndoCommand::performExecute()
         bool performExecute() throw (Exception) override;
 
+        void removeNetSegment(SI_NetSegment& netsegment) throw (Exception);
+        void splitUpNetSegment(SI_NetSegment& netsegment,
+                               const NetSegmentItems& selectedItems) throw (Exception);
+        void createNewSubNetSegment(SI_NetSegment& netsegment, const NetSegmentItems& items) throw (Exception);
+        void removeNetLabel(SI_NetLabel& netlabel) throw (Exception);
+        void removeSymbol(SI_Symbol& symbol) throw (Exception);
         void detachNetPointFromSymbolPin(SI_NetPoint& netpoint) throw (Exception);
+        ComponentSignalInstance* getCmpSigInstToBeDisconnected(SI_NetPoint& netpoint) const noexcept;
         void disconnectComponentSignalInstance(ComponentSignalInstance& signal) throw (Exception);
+        QList<NetSegmentItems> getNonCohesiveNetSegmentSubSegments(SI_NetSegment& segment,
+                                                                   const NetSegmentItems& removedItems) noexcept;
+        void findAllConnectedNetPointsAndNetLines(SI_NetPoint& netpoint,
+                                                  QSet<SI_NetPoint*>& availableNetPoints,
+                                                  QSet<SI_NetLine*>& availableNetLines,
+                                                  QSet<SI_NetPoint*>& netpoints,
+                                                  QSet<SI_NetLine*>& netlines) const noexcept;
 
 
         // Attributes from the constructor

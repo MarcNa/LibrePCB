@@ -36,11 +36,13 @@ SOURCES += \
     cmd/cmdaddcomponenttocircuit.cpp \
     cmd/cmdadddevicetoboard.cpp \
     cmd/cmdaddsymboltoschematic.cpp \
+    cmd/cmdchangenetsignalofschematicnetsegment.cpp \
     cmd/cmdcombineallitemsunderboardnetpoint.cpp \
-    cmd/cmdcombineallnetsignalsunderschematicnetpoint.cpp \
+    cmd/cmdcombineallitemsunderschematicnetpoint.cpp \
     cmd/cmdcombineboardnetpoints.cpp \
     cmd/cmdcombinenetsignals.cpp \
     cmd/cmdcombineschematicnetpoints.cpp \
+    cmd/cmdcombineschematicnetsegments.cpp \
     cmd/cmddetachboardnetpointfromviaorpad.cpp \
     cmd/cmdflipselectedboarditems.cpp \
     cmd/cmdmoveselectedboarditems.cpp \
@@ -93,11 +95,13 @@ HEADERS += \
     cmd/cmdaddcomponenttocircuit.h \
     cmd/cmdadddevicetoboard.h \
     cmd/cmdaddsymboltoschematic.h \
+    cmd/cmdchangenetsignalofschematicnetsegment.h \
     cmd/cmdcombineallitemsunderboardnetpoint.h \
-    cmd/cmdcombineallnetsignalsunderschematicnetpoint.h \
+    cmd/cmdcombineallitemsunderschematicnetpoint.h \
     cmd/cmdcombineboardnetpoints.h \
     cmd/cmdcombinenetsignals.h \
     cmd/cmdcombineschematicnetpoints.h \
+    cmd/cmdcombineschematicnetsegments.h \
     cmd/cmddetachboardnetpointfromviaorpad.h \
     cmd/cmdflipselectedboarditems.h \
     cmd/cmdmoveselectedboarditems.h \

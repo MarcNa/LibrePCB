@@ -36,6 +36,7 @@ namespace project {
 class Circuit;
 class Schematic;
 class SI_NetPoint;
+class SI_NetSegment;
 class NetSignal;
 
 namespace editor {
@@ -52,8 +53,7 @@ class CmdPlaceSchematicNetPoint final : public UndoCommandGroup
     public:
 
         // Constructors / Destructor
-        CmdPlaceSchematicNetPoint(Schematic& schematic, const Point& pos,
-                                  const QString& netclass, const QString& netsignal) noexcept;
+        CmdPlaceSchematicNetPoint(Schematic& schematic, const Point& pos) noexcept;
         ~CmdPlaceSchematicNetPoint() noexcept;
 
         SI_NetPoint* getNetPoint() const noexcept {return mNetPoint;}
@@ -67,8 +67,9 @@ class CmdPlaceSchematicNetPoint final : public UndoCommandGroup
         bool performExecute() throw (Exception) override;
 
         bool buildAndExecuteChildCommands() throw (Exception);
-        NetSignal* getOrCreateNewNetSignal() throw (Exception);
-        SI_NetPoint* createNewNetPoint(NetSignal& netsignal) throw (Exception);
+        NetSignal& createNewNetSignal() throw (Exception);
+        SI_NetSegment& createNewNetSegment(NetSignal& netsignal) throw (Exception);
+        SI_NetPoint& createNewNetPoint(SI_NetSegment& netsegment) throw (Exception);
 
 
         // Private Member Variables
@@ -77,8 +78,6 @@ class CmdPlaceSchematicNetPoint final : public UndoCommandGroup
         Circuit& mCircuit;
         Schematic& mSchematic;
         Point mPosition;
-        QString mNetClassName;
-        QString mNetSignalName;
 
         // Member Variables
         SI_NetPoint* mNetPoint;

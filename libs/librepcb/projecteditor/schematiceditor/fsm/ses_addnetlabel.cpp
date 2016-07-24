@@ -27,6 +27,7 @@
 #include <librepcb/common/undostack.h>
 #include <librepcb/project/circuit/circuit.h>
 #include <librepcb/project/schematics/items/si_netlabel.h>
+#include <librepcb/project/schematics/items/si_netsegment.h>
 #include <librepcb/project/schematics/cmd/cmdschematicnetlabeladd.h>
 #include <librepcb/project/schematics/cmd/cmdschematicnetlabeledit.h>
 #include <librepcb/project/schematics/schematic.h>
@@ -77,11 +78,13 @@ bool SES_AddNetLabel::entry(SEE_Base* event) noexcept
     Schematic* schematic = mEditor.getActiveSchematic();
     if (!schematic) return false;
 
-    if (!addLabel(*schematic)) return false;
-
     // Check this state in the "tools" toolbar
     mEditorUi.actionToolAddNetLabel->setCheckable(true);
     mEditorUi.actionToolAddNetLabel->setChecked(true);
+
+    // change the cursor
+    mEditorGraphicsView.setCursor(Qt::CrossCursor);
+
     return true;
 }
 
@@ -106,6 +109,10 @@ bool SES_AddNetLabel::exit(SEE_Base* event) noexcept
     // Uncheck this state in the "tools" toolbar
     mEditorUi.actionToolAddNetLabel->setCheckable(false);
     mEditorUi.actionToolAddNetLabel->setChecked(false);
+
+    // change the cursor
+    mEditorGraphicsView.setCursor(Qt::ArrowCursor);
+
     return true;
 }
 
@@ -131,9 +138,11 @@ SES_Base::ProcRetVal SES_AddNetLabel::processSceneEvent(SEE_Base* event) noexcep
             {
                 case Qt::LeftButton:
                 {
-                    fixLabel(pos);
-                    addLabel(*schematic);
-                    updateLabel(*schematic, pos);
+                    if (mUndoCmdActive) {
+                        fixLabel(pos);
+                    } else {
+                        addLabel(*schematic, pos);
+                    }
                     return ForceStayInState;
                 }
                 case Qt::RightButton:
@@ -152,7 +161,7 @@ SES_Base::ProcRetVal SES_AddNetLabel::processSceneEvent(SEE_Base* event) noexcep
             {
                 case Qt::RightButton:
                 {
-                    if (sceneEvent->screenPos() == sceneEvent->buttonDownScreenPos(Qt::RightButton)) {
+                    if (mUndoCmdActive && (sceneEvent->screenPos() == sceneEvent->buttonDownScreenPos(Qt::RightButton))) {
                         mEditCmd->rotate(Angle::deg90(), pos, true);
                         return ForceStayInState;
                     }
@@ -169,7 +178,7 @@ SES_Base::ProcRetVal SES_AddNetLabel::processSceneEvent(SEE_Base* event) noexcep
             QGraphicsSceneMouseEvent* sceneEvent = dynamic_cast<QGraphicsSceneMouseEvent*>(qevent);
             Q_ASSERT(sceneEvent);
             Point pos = Point::fromPx(sceneEvent->scenePos(), mEditor.getGridProperties().getInterval());
-            updateLabel(*schematic, pos);
+            updateLabel(pos);
             return ForceStayInState;
         }
 
@@ -179,19 +188,19 @@ SES_Base::ProcRetVal SES_AddNetLabel::processSceneEvent(SEE_Base* event) noexcep
     return PassToParentState;
 }
 
-bool SES_AddNetLabel::addLabel(Schematic& schematic) noexcept
+bool SES_AddNetLabel::addLabel(Schematic& schematic, const Point& pos) noexcept
 {
     Q_ASSERT(mUndoCmdActive == false);
 
     try
     {
-        if (mCircuit.getNetSignals().isEmpty()) {
-            throw RuntimeError(__FILE__, __LINE__, QString(), tr("No net signal found."));
-        }
-        NetSignal* signal = mCircuit.getNetSignals().values().first();
+        QList<SI_NetLine*> netlinesUnderCursor = schematic.getNetLinesAtScenePos(pos);
+        if (netlinesUnderCursor.isEmpty()) return false;
+        SI_NetSegment& netsegment = netlinesUnderCursor.first()->getNetSegment();
+
         mUndoStack.beginCmdGroup(tr("Add net label to schematic"));
         mUndoCmdActive = true;
-        CmdSchematicNetLabelAdd* cmdAdd = new CmdSchematicNetLabelAdd(schematic, *signal, Point());
+        CmdSchematicNetLabelAdd* cmdAdd = new CmdSchematicNetLabelAdd(netsegment, pos);
         mUndoStack.appendToCmdGroup(cmdAdd);
         mCurrentNetLabel = cmdAdd->getNetLabel();
         mEditCmd = new CmdSchematicNetLabelEdit(*mCurrentNetLabel);
@@ -209,28 +218,19 @@ bool SES_AddNetLabel::addLabel(Schematic& schematic) noexcept
     }
 }
 
-bool SES_AddNetLabel::updateLabel(Schematic& schematic, const Point& pos) noexcept
+bool SES_AddNetLabel::updateLabel(const Point& pos) noexcept
 {
-    Q_ASSERT(mUndoCmdActive == true);
-
-    try
-    {
-        // get netline under cursor
-        QList<SI_NetLine*> lines = schematic.getNetLinesAtScenePos(pos);
-        if (!lines.isEmpty()) mEditCmd->setNetSignal(lines.first()->getNetSignal(), true);
+    if (mUndoCmdActive) {
         mEditCmd->setPosition(pos, true);
         return true;
-    }
-    catch (Exception& e)
-    {
-        QMessageBox::critical(&mEditor, tr("Error"), e.getUserMsg());
+    } else {
         return false;
     }
 }
 
 bool SES_AddNetLabel::fixLabel(const Point& pos) noexcept
 {
-    Q_ASSERT(mUndoCmdActive == true);
+    if (!mUndoCmdActive) return false;
 
     try
     {
