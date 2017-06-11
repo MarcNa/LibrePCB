@@ -259,8 +259,38 @@ DomElement* DomElement::getNextSibling(const QString& name, bool throwIfNotFound
 }
 
 /*****************************************************************************************
- *  QDomElement Converter Methods
+ *  Conversion Methods
  ****************************************************************************************/
+
+QString escapeSExpression(const QString& s)
+{
+    bool ok = false;
+    s.toDouble(&ok);
+    if (ok) return s;
+    else    return "\"" + s + "\"";
+}
+
+QString DomElement::toSExpressions(int indent) const noexcept
+{
+    QString sexpr;
+    sexpr += QString(" ").repeated(indent) + "(" + mName;
+    foreach (const QString key, mAttributes.keys()) {
+        sexpr += " (" + key + " " + escapeSExpression(mAttributes[key]) + ")";
+    }
+    if (hasChilds()) {
+        sexpr += "\n";
+        foreach (DomElement* child, mChilds) {
+            sexpr += child->toSExpressions(indent + 1);
+        }
+        sexpr += QString(" ").repeated(indent);
+    } else if (mAttributes.isEmpty()) {
+        sexpr += " " + escapeSExpression(mText);
+    } else if (!mText.isNull()) {
+        sexpr += " (value " + escapeSExpression(mText) + ")";
+    }
+    sexpr += ")\n";
+    return sexpr;
+}
 
 void DomElement::writeToQXmlStreamWriter(QXmlStreamWriter& writer) const noexcept
 {

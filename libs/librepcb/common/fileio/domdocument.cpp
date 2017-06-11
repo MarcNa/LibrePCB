@@ -91,16 +91,17 @@ DomElement& DomDocument::getRoot(const QString& expectedName) const throw (Excep
 
 QByteArray DomDocument::toByteArray() const throw (Exception)
 {
-    QByteArray data;
-    QXmlStreamWriter writer(&data);
-    writer.setAutoFormatting(true);
-    writer.setAutoFormattingIndent(1); // indent only 1 space to save disk space
-    writer.setCodec("UTF-8");
-    writer.writeStartDocument("1.0", true);
-    mRootElement->writeToQXmlStreamWriter(writer);
-    writer.writeEndDocument();
-    if (writer.hasError()) throw LogicError(__FILE__, __LINE__);
-    return data;
+    //QByteArray data;
+    //QXmlStreamWriter writer(&data);
+    //writer.setAutoFormatting(true);
+    //writer.setAutoFormattingIndent(1); // indent only 1 space to save disk space
+    //writer.setCodec("UTF-8");
+    //writer.writeStartDocument("1.0", true);
+    //mRootElement->writeToQXmlStreamWriter(writer);
+    //writer.writeEndDocument();
+    //if (writer.hasError()) throw LogicError(__FILE__, __LINE__);
+    //return data;
+    return mRootElement->toSExpressions(0).toUtf8();
 }
 
 /*****************************************************************************************

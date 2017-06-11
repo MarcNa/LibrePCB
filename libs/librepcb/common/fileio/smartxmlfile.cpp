@@ -56,7 +56,8 @@ std::unique_ptr<DomDocument> SmartXmlFile::parseFileAndBuildDomTree() const thro
 
 void SmartXmlFile::save(const DomDocument& domDocument, bool toOriginal) throw (Exception)
 {
-    const FilePath& filepath = prepareSaveAndReturnFilePath(toOriginal);
+    FilePath filepath = prepareSaveAndReturnFilePath(toOriginal);
+    filepath.setPath(filepath.toStr().replace(".xml", ".scm"));
     FileUtils::writeFile(filepath, domDocument.toByteArray());
     updateMembersAfterSaving(toOriginal);
 }

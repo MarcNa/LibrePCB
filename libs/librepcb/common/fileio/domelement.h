@@ -448,6 +448,8 @@ class DomElement final
 
         // Conversion Methods
 
+        QString toSExpressions(int indent) const noexcept;
+
         /**
          * @brief Serialize this DomElement into a QXmlStreamWriter (recursively)
          *
